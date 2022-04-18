@@ -1,5 +1,5 @@
 public with sharing class ucl_service {
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static void executeService(){
         try {
             Http http = new Http();
