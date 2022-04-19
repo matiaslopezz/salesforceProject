@@ -131,7 +131,17 @@ public with sharing class ucl_service {
             }          
         }
         catch (Exception e) {            
+            //Recording errors inside a custom object with their names and descriptions
             Error_Logs__c errors = new Error_Logs__c(Name = e.getTypeName(), Error_Message__c = e.getMessage());
+            
+            //Send an email to the admin in case of error
+            Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+
+            List<Profile> adminProfile = [SELECT Id FROM Profile WHERE Name = 'System Administrator'];
+            List<User> adminUser = [SELECT Id, Email FROM User WHERE ProfileId =: adminProfile];
+            String[] toAddresses = new String[] {adminUser[0].Email};
+            mail.setToAddresses(toAddresses);
+
             throw new AuraHandledException(e.getMessage());
         }
     }
