@@ -8,9 +8,9 @@ public with sharing class ucl_clearDatabase {
 
             delete advisors;
 
-        } catch (Exception e) {
-            //throw new AuraHandledException(e.getMessage());
+        } catch (Exception e) {            
             Error_Logs__c errors = new Error_Logs__c(Name = e.getTypeName(), Error_Message__c = e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
     }
 }

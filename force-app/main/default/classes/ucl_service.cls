@@ -97,7 +97,8 @@ public with sharing class ucl_service {
                             Email__c = (String) clientMap.get('Email'),
                             Phone__c = (String) clientMap.get('Phone'),
                             Address__c = (String) clientMap.get('Address'),
-                            Client_Number__c = (String) clientMap.get('ClientNumber')
+                            Client_Number__c = (String) clientMap.get('ClientNumber'),
+                            Origin__c = 'Heroku'
                         );
                         //Assign a field to relate the client with its advisor 
                         newClient.Legal_Advisor__c = advisor.id;
@@ -119,7 +120,7 @@ public with sharing class ucl_service {
                                 }
                         }
                         //We delete those records from the org if they are no longer coming from the JSON file
-                        if (aux == 0){
+                        if ((aux == 0) && (existingClient.Origin__c == 'Heroku')){
                             clientsToDelete.add(existingClient);
                         }
                     }
@@ -129,9 +130,9 @@ public with sharing class ucl_service {
                 upsert clientsToSalesforce;         
             }          
         }
-        catch (Exception e) {
-            //throw new AuraHandledException(e.getMessage());
+        catch (Exception e) {            
             Error_Logs__c errors = new Error_Logs__c(Name = e.getTypeName(), Error_Message__c = e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
     }
 }
