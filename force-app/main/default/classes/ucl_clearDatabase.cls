@@ -10,6 +10,7 @@ public with sharing class ucl_clearDatabase {
 
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
+            Error_Logs__c errors = new Error_Logs__c(Name = e.toString(), Error_Message = e.getMessage());
         }
     }
 }

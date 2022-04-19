@@ -109,31 +109,29 @@ public with sharing class ucl_service {
                     
                 //Avoid duplicates
                 if (existingClients.size() > 0){
-                    for (Client__c existingClient : existingClients){
+                    for (Client__c existingClient : existingClients){            
+                        Integer aux = 0;
                         for (Client__c client : clientsToSalesforce) {
-                            if (existingClient.Client_Number__c == client.Client_Number__c){
-                                client.Id = existingClient.Id;                    
-                            }
+                            if ((client.Legal_Advisor__c == existingClient.Legal_Advisor__c) &&
+                                (client.Client_Number__c == existingClient.Client_Number__c)){
+                                    client.Id = existingClient.Id; 
+                                    aux++;
+                                }
                         }
-                    }
-                }
-                
-                upsert clientsToSalesforce;
-                
-                //We delete those records from the org if they are no longer coming from the JSON file
-                if (existingClients.size() > 0){
-                    for (Client__c existingClient : existingClients){
-                        if (!clientsToSalesforce.contains(existingClient)){
+                        //We delete those records from the org if they are no longer coming from the JSON file
+                        if (aux == 0){
                             clientsToDelete.add(existingClient);
                         }
                     }
                 }
                 
-                delete clientsToDelete;           
+                delete clientsToDelete;                  
+                upsert clientsToSalesforce;         
             }          
         }
         catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
+            Error_Logs__c errors = new Error_Logs__c(Name = e.toString(), Error_Message = e.getMessage());            
         }
     }
 }
