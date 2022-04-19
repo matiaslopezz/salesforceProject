@@ -130,8 +130,8 @@ public with sharing class ucl_service {
             }          
         }
         catch (Exception e) {
-            throw new AuraHandledException(e.getMessage());
-            Error_Logs__c errors = new Error_Logs__c(Name = e.toString(), Error_Message = e.getMessage());            
+            //throw new AuraHandledException(e.getMessage());
+            Error_Logs__c errors = new Error_Logs__c(Name = e.getTypeName(), Error_Message__c = e.getMessage());
         }
     }
 }

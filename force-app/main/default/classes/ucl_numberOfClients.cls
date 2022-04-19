@@ -5,11 +5,10 @@ public with sharing class ucl_numberOfClients {
             for (String key : clients.keySet()){
                 mapOfNumbers.put(key, clients.get(key).size());
             }    
-            return mapOfNumbers;
-            
-        } catch (Exception e) {
+            return mapOfNumbers;            
+        } catch (Exception e) {            
+            Error_Logs__c errors = new Error_Logs__c(Name = e.getTypeName(), Error_Message__c = e.getMessage());
             throw new AuraHandledException(e.getMessage());
-            Error_Logs__c errors = new Error_Logs__c(Name = e.toString(), Error_Message = e.getMessage());
         }
     }
 }
