@@ -132,15 +132,37 @@ public with sharing class ucl_service {
         }
         catch (Exception e) {            
             //Recording errors inside a custom object with their names and descriptions
-            Error_Logs__c errors = new Error_Logs__c(Name = e.getTypeName(), Error_Message__c = e.getMessage());
-            
+            Error_Logs__c error = new Error_Logs__c(Name = e.getTypeName(), Error_Message__c = e.getMessage());
+                      
             //Send an email to the admin in case of error
             Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
 
+            //Retrieve admin info to send the email
             List<Profile> adminProfile = [SELECT Id FROM Profile WHERE Name = 'System Administrator'];
             List<User> adminUser = [SELECT Id, Email FROM User WHERE ProfileId =: adminProfile];
-            String[] toAddresses = new String[] {adminUser[0].Email};
+            String[] toAddresses = new String[] {adminUser[0].Email};  
+                
+            //Email tunning
+            mail.setSubject('Final Project - Error');
+            String body = 'Dear Admin, \n' +
+                        'The following error has been triggered during the process of invoking the service: \n' +
+                        error.Name + '\n ' +
+                        error.Error_Message__c + '\n' +
+                        'Please contact the developer team so this issue can be tackled in order the keep the database updated. \n' +
+                        'Thanks in advance.';
+            mail.setHtmlBody(body);
             mail.setToAddresses(toAddresses);
+            
+            //Email sender function requires a list as parameter
+            Messaging.SingleEmailMessage[] mails = new List<Messaging.SingleEmailMessage> {mail};
+			Messaging.SendEmailResult[] results = Messaging.sendEmail(mails);
+
+            //Checking if the email was sent or not
+            if (results[0].success) {
+                System.debug('The email was sent successfully.');
+            } else {
+                System.debug('The email failed to send: ' + results[0].errors[0].message);
+            }
 
             throw new AuraHandledException(e.getMessage());
         }
