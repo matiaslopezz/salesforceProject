@@ -2,10 +2,10 @@
     <lightning-card title="Service Component">
         <div class="slds-m-around_medium">
             <h2 class="slds-text-heading_small slds-m-bottom_small">
-                Use the following button to invoke the service.
+                Use the following button to invoke the service or clear the database.
             </h2>
-            <lightning-button label="Calling Service" onclick={handleClick}></lightning-button>
-            <lightning-button label="Clear Database" onclick={clearClick}></lightning-button>
+            <lightning-button variant="success" label="Calling Service" onclick={handleClick}></lightning-button>
+            <lightning-button variant="destructive" label="Clear Database" onclick={clearClick}></lightning-button>
         </div>
     </lightning-card>
 </template>

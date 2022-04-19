@@ -18,13 +18,16 @@ public with sharing class ucl_service {
 
             List<Client__c> clientsToDelete = new List<Client__c>();
 
+            Legal_Advisor__c[] existingAdvisors = [SELECT Id, Name, Account_Number__c, Account_Status__c FROM Legal_Advisor__c];
+            Client__c[] existingClients = [SELECT Id, Name, Client_Number__c, Legal_Advisor__c FROM Client__c];
+
             if(response.getStatusCode() == 200) {
                 List<Object> accounts = (List<Object>)JSON.deserializeUntyped(response.getBody());
                 for (Object account : accounts){
                     //Assign a map for each legal advisor account
                     Map<String,Object> accountMap = (Map<String,Object>) account;
 
-                    //Legal advisor record construciton
+                    //Legal advisor record construction
                     Legal_Advisor__c newAdvisor = new Legal_Advisor__c(
                         Name = (String) accountMap.get('AccountName'),
                         Account_Name__c = (String) accountMap.get('AccountName'),
@@ -58,38 +61,29 @@ public with sharing class ucl_service {
                     }
                 }
 
-                //Avoid duplicates
-                Legal_Advisor__c[] checkingAdvisors = 
-                [SELECT Name,Account_Name__c,Account_Number__c,Account_Status__c,As_of_Date__c                                                        
-                FROM Legal_Advisor__c];
-                                                              
-                if (checkingAdvisors.size() > 0){
-                    for (Legal_Advisor__c checkingAdvisor : checkingAdvisors){
+                //Add those advisors with disabled status field that already are in the org
+                for (Legal_Advisor__c advisor : advisors){
+                    for (Legal_Advisor__c existingAdvisor : existingAdvisors){
+                        if ((existingAdvisor.Account_Number__c == advisor.Account_Number__c) && 
+                            (advisor.Account_Status__c == 'Disabled') && 
+                            (existingAdvisor.Account_Status__c == 'Enabled')){
+                            advisorsToSalesforce.add(advisor);
+                        }
+                    }
+                }
+
+                //Avoid duplicates                                                           
+                if (existingAdvisors.size() > 0){
+                    for (Legal_Advisor__c existingAdvisor : existingAdvisors){
                         for (Legal_Advisor__c advisor : advisorsToSalesforce){
-                            if (checkingAdvisor.Account_Number__c == advisor.Account_Number__c){
-                                advisor.Id = checkingAdvisor.Id;
+                            if (existingAdvisor.Account_Number__c == advisor.Account_Number__c){
+                                advisor.Id = existingAdvisor.Id;
                             }
                         }
                     }
                 }
 
-                upsert advisorsToSalesforce; 
-                
-                //Upload those records with an enabled status in the org but disabled from the json file
-                if (checkingAdvisors.size() > 0){
-                    for (Legal_Advisor__c checkingAdvisor : checkingAdvisors){
-                        for (Legal_Advisor__c advisor : advisors){
-                            if ((advisor.id == checkingAdvisor.id) && 
-                                (advisor.Account_Status__c == 'Disabled') && 
-                                (checkingAdvisor.Account_Status__c == 'Enabled')){
-                                    checkingAdvisor.Account_Status__c = 'Disabled';
-                                    advisorsToUpdate.add(checkingAdvisor);                
-                                }
-                        }
-                    }       
-                }               
-                
-                update advisorsToUpdate;
+                upsert advisorsToSalesforce;
 
                 // CLIENT SECTION   
                 
@@ -113,14 +107,12 @@ public with sharing class ucl_service {
                     }
                 } 
                     
-                //Avoid duplicates    
-                Client__c[] checkingClients = [SELECT Name,First_Name__c,Last_Name__c,Email__c,Phone__c,Address__c,Client_Number__c,
-                                            Legal_Advisor__c FROM Client__c];
-                if (checkingClients.size() > 0){
-                    for (Client__c checkingClient : checkingClients){
+                //Avoid duplicates
+                if (existingClients.size() > 0){
+                    for (Client__c existingClient : existingClients){
                         for (Client__c client : clientsToSalesforce) {
-                            if (checkingClient.Client_Number__c == client.Client_Number__c){
-                                client.Id = checkingClient.Id;                    
+                            if (existingClient.Client_Number__c == client.Client_Number__c){
+                                client.Id = existingClient.Id;                    
                             }
                         }
                     }
@@ -129,10 +121,10 @@ public with sharing class ucl_service {
                 upsert clientsToSalesforce;
                 
                 //We delete those records from the org if they are no longer coming from the JSON file
-                if (checkingClients.size() > 0){
-                    for (Client__c client : checkingClients){
-                        if (!clientsToSalesforce.contains(client)){
-                            clientsToDelete.add(client);
+                if (existingClients.size() > 0){
+                    for (Client__c existingClient : existingClients){
+                        if (!clientsToSalesforce.contains(existingClient)){
+                            clientsToDelete.add(existingClient);
                         }
                     }
                 }
